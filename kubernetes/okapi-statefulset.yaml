@@ -1,0 +1,79 @@
+# STS manifest for Okapi with Hazelcast clustering
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: "okapi"
+  labels:
+    app: "okapi"
+  namespace: "okapi-cluster-demo"
+spec:
+  serviceName: "okapi"
+  selector:
+    matchLabels:
+      app: "okapi"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: "okapi"
+    spec:
+      serviceAccount: "okapi-cluster-service-account"
+      serviceAccountName: "okapi-cluster-service-account"
+      # Set grace period to allow for graceful Hazelcast upgrades
+      terminationGracePeriodSeconds: 300
+      containers:
+        - name: okapi
+          image: folioorg/okapi:4.14.6
+          # each command argument must be a separate item in the list
+          args:
+            # - dev
+            - cluster
+            - "-conf"
+            - /etc/okapi-config.json
+            - "-hazelcast-config-file"
+            - /etc/hazelcast.xml
+            - "-cluster-host"
+            - $(POD_IP)
+          env:
+          # expose pod IP and name using Kubernetes downward API
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          # note Hazelcast options below
+          - name: JAVA_OPTIONS
+            value: "-Djava.awt.headless=true -Dlog4j.configurationFile=/etc/log4j2.xml -Dhost=$(POD_IP) -Dnodename=$(POD_NAME) -Dhazelcast.logging.type=log4j -Dhazelcast.shutdownhook.policy=GRACEFUL -Dhazelcast.graceful.shutdown.max.wait=300 -Dlog4j2.formatMsgNoLookups=true"
+          ports:
+          - containerPort: 9130
+            protocol: TCP
+          - containerPort: 5701
+            protocol: TCP
+          volumeMounts:
+          - name: "hazelcast"
+            mountPath: "/etc/hazelcast.xml"
+            subPath: "hazelcast.xml"
+          - name: "log4j2-xml"
+            readOnly: true
+            mountPath: "/etc/log4j2.xml"
+            subPath: "log4j2.xml"
+          - name: "okapi-config"
+            mountPath: "/etc/okapi-config.json"
+            subPath: "okapi-config.json"
+      volumes:
+      - name: "hazelcast"
+        configMap:
+          name: "hazelcast"
+      - name: "log4j2-xml"
+        configMap:
+          name: okapi-log4j2-xml
+      - name: "okapi-config"
+        secret:
+          secretName: okapi-config-secret
+          defaultMode: 420

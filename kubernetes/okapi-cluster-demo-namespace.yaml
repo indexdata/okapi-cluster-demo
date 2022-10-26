@@ -1,0 +1,8 @@
+# Namespace declaration for Okapi cluster demo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    name: okapi-cluster-demo
+  name: okapi-cluster-demo

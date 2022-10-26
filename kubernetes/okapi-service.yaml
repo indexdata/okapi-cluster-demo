@@ -1,0 +1,18 @@
+# Service manifest for Okapi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "okapi"
+  labels:
+    app: "okapi"
+  namespace: "okapi-cluster-demo"
+spec:
+  clusterIP: None
+  selector:
+    app: "okapi"
+  ports:
+  - name: hazelcast
+    port: 5701
+  - name: okapi
+    port: 9130

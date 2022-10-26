@@ -1,0 +1,20 @@
+# Service account and role binding for Okapi Hazelcast clustering
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: okapi-cluster-service-account
+  namespace: okapi-cluster-demo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hazelcast-rb-okapi-cluster-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+- kind: ServiceAccount
+  name: okapi-cluster-service-account
+  namespace: okapi-cluster-demo

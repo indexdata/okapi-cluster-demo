@@ -1,0 +1,21 @@
+# Sample nginx ingress for Okapi. Replace with appropriate ingress for your environment.
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: "nginx"
+  namespace: "okapi-cluster-demo"
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    external-dns.alpha.kubernetes.io/target: "my-load-balancer.elb.amazonaws.com"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+spec:
+  rules:
+    - host: "okapi-cluster-demo.example.com"
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: "okapi"
+              servicePort: 9130
